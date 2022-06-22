@@ -19,7 +19,6 @@ package com.navercorp.pinpoint.grpc.security;
 import com.navercorp.pinpoint.common.util.CollectionUtils;
 import com.navercorp.pinpoint.common.util.StringUtils;
 import com.navercorp.pinpoint.grpc.util.Resource;
-
 import io.grpc.netty.GrpcSslContexts;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -27,10 +26,15 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.security.pkcs.PKCS8Key;
+import sun.security.util.DerValue;
+import sun.security.x509.X509CertImpl;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,10 +52,11 @@ public final class SslContextFactory {
 
         SslContextBuilder sslContextBuilder;
         try {
-            Resource keyCertChainFileResource = serverConfig.getKeyCertChainResource();
-            Resource keyResource = serverConfig.getKeyResource();
+            X509Certificate[] certificates = readX509Certificates(serverConfig.getKeyCertChainResources());
+            String password = serverConfig.getKeyPassword();
+            PrivateKey privateKey = readPrivateKey(serverConfig.getKeyResource());
 
-            sslContextBuilder = SslContextBuilder.forServer(keyCertChainFileResource.getInputStream(), keyResource.getInputStream());
+            sslContextBuilder = SslContextBuilder.forServer(privateKey, password, certificates);
             SslContext sslContext = createSslContext(sslContextBuilder, sslProvider);
 
             assertValidCipherSuite(sslContext);
@@ -73,7 +78,7 @@ public final class SslContextFactory {
 
         SslProvider sslProvider = getSslProvider(clientConfig.getSslProviderType());
 
-        SslContextBuilder sslContextBuilder = null;
+        SslContextBuilder sslContextBuilder;
         try {
             sslContextBuilder = SslContextBuilder.forClient();
 
@@ -96,6 +101,30 @@ public final class SslContextFactory {
             throw e;
         } catch (Exception e) {
             throw new SSLException(e);
+        }
+    }
+
+    private static X509Certificate[] readX509Certificates(Resource[] resources) {
+        X509Certificate[] certs = new X509Certificate[resources.length];
+        for (int i = 0; i < resources.length; i++) {
+            certs[i] = readX509Certificate(resources[i]);
+        }
+        return certs;
+    }
+
+    private static X509Certificate readX509Certificate(Resource resource) {
+        try {
+            return new X509CertImpl(resource.getInputStream());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read certificate: " + resource, e);
+        }
+    }
+
+    private static PrivateKey readPrivateKey(Resource resource) {
+        try {
+            return PKCS8Key.parseKey(new DerValue(resource.getInputStream()));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read private key: " + resource, e);
         }
     }
 
