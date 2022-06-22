@@ -82,9 +82,9 @@ public final class SslContextFactory {
         try {
             sslContextBuilder = SslContextBuilder.forClient();
 
-            Resource trustCertResource = clientConfig.getTrustCertResource();
-            if (trustCertResource != null) {
-                sslContextBuilder.trustManager(trustCertResource.getInputStream());
+            Resource[] trustCertResources = clientConfig.getTrustCertResources();
+            if (trustCertResources != null) {
+                sslContextBuilder.trustManager(readX509Certificates(trustCertResources));
             } else {
                 // Loads default Root CA certificates (generally, from JAVA_HOME/lib/cacerts)
                 TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
