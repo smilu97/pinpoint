@@ -17,7 +17,11 @@
 
 package com.navercorp.pinpoint.web.config;
 
+import com.navercorp.pinpoint.common.server.bo.AgentIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 import com.navercorp.pinpoint.common.server.util.time.Range;
+import com.navercorp.pinpoint.mybatis.typehandler.UUIDByteArrayTypeHandler;
 import com.navercorp.pinpoint.web.alarm.vo.Rule;
 import com.navercorp.pinpoint.web.vo.AgentCountStatistics;
 import com.navercorp.pinpoint.web.vo.User;
@@ -28,6 +32,8 @@ import com.navercorp.pinpoint.web.webhook.model.Webhook;
 import com.navercorp.pinpoint.web.webhook.model.WebhookSendInfo;
 import org.apache.ibatis.type.TypeAliasRegistry;
 import org.apache.ibatis.type.TypeHandlerRegistry;
+
+import java.util.UUID;
 
 public class WebCommonMyBatisRegistryHandler implements WebMyBatisRegistryHandler {
     @Override
@@ -43,9 +49,14 @@ public class WebCommonMyBatisRegistryHandler implements WebMyBatisRegistryHandle
 
         typeAliasRegistry.registerAlias(AgentCountStatistics.class);
         typeAliasRegistry.registerAlias(Range.class);
+
+        typeAliasRegistry.registerAlias(ServiceIndex.class);
+        typeAliasRegistry.registerAlias(ApplicationIndex.class);
+        typeAliasRegistry.registerAlias(AgentIndex.class);
     }
 
     @Override
     public void registerTypeHandler(TypeHandlerRegistry typeHandlerRegistry) {
+        typeHandlerRegistry.register(UUID.class, new UUIDByteArrayTypeHandler());
     }
 }

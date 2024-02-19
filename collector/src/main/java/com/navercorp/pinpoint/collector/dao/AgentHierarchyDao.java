@@ -16,9 +16,9 @@
 
 package com.navercorp.pinpoint.collector.dao;
 
-import com.navercorp.pinpoint.collector.vo.ApplicationIndex;
-import com.navercorp.pinpoint.collector.vo.ServiceHasApplication;
-import com.navercorp.pinpoint.collector.vo.ServiceIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceHasApplication;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,13 +26,13 @@ import java.util.UUID;
 /**
  * @author youngjin.kim2
  */
-public interface ServiceIndexDao {
+public interface AgentHierarchyDao {
 
     List<ServiceIndex> selectAllServices();
     List<ApplicationIndex> selectAllApplications();
     List<ServiceHasApplication> selectAllServiceHasApplications();
     Long selectServiceIdByName(String serviceId, boolean writeLock);
-    List<Long> selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock);
+    Long selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock);
     Long insertService(String serviceId);
     Long insertApplication(String applicationName);
     void insertAgent(UUID agentId, String agentName);

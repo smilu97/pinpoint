@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.dao.mysql;
+package com.navercorp.pinpoint.collector.dao;
 
-import com.navercorp.pinpoint.collector.dao.ServiceIndexDao;
-import com.navercorp.pinpoint.collector.vo.ApplicationIndex;
-import com.navercorp.pinpoint.collector.vo.ServiceHasApplication;
-import com.navercorp.pinpoint.collector.vo.ServiceIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceHasApplication;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +30,7 @@ import java.util.UUID;
  */
 @Service
 @ConditionalOnProperty(name = "pinpoint.experimental.service-index", havingValue = "empty", matchIfMissing = true)
-public class EmptyServiceIndexDao implements ServiceIndexDao {
+public class EmptyAgentHierarchyDao implements AgentHierarchyDao {
 
     @Override
     public List<ServiceIndex> selectAllServices() {
@@ -50,12 +49,12 @@ public class EmptyServiceIndexDao implements ServiceIndexDao {
 
     @Override
     public Long selectServiceIdByName(String serviceId, boolean writeLock) {
-        return 0L;
+        return null;
     }
 
     @Override
-    public List<Long> selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock) {
-        return List.of();
+    public Long selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock) {
+        return null;
     }
 
     @Override

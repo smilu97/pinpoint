@@ -16,6 +16,8 @@
 
 package com.navercorp.pinpoint.common.util;
 
+import com.navercorp.pinpoint.common.uuid.TimeBasedEpochGenerator;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
@@ -26,6 +28,7 @@ import java.util.UUID;
  */
 public class AgentUuidUtils {
 
+    private static final TimeBasedEpochGenerator UUID_V7_GENERATOR = new TimeBasedEpochGenerator(null);
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     /**
@@ -87,10 +90,28 @@ public class AgentUuidUtils {
         }
 
         byte[] decoded = Base64.getUrlDecoder().decode(bytes);
+        if (decoded.length != 2 * BytesUtils.LONG_BYTE_LENGTH) {
+            throw new IllegalArgumentException("Invalid decoded byte array: " + BytesUtils.toString(decoded));
+        }
 
         long mostSigBits = BytesUtils.bytesToLong(decoded, 0);
         long leastSigBits = BytesUtils.bytesToLong(decoded, BytesUtils.LONG_BYTE_LENGTH);
         return new UUID(mostSigBits, leastSigBits);
+    }
+
+    public static UUID generateUUIDv7() {
+        return UUID_V7_GENERATOR.generate();
+    }
+
+    public static String prettifyAgentId(String agentId) {
+        if (agentId == null) {
+            return null;
+        }
+        try {
+            return AgentUuidUtils.decode(agentId).toString();
+        } catch (Exception e) {
+            return agentId;
+        }
     }
 
 }

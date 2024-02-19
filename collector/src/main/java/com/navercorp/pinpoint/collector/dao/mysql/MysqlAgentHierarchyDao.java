@@ -16,15 +16,15 @@
 
 package com.navercorp.pinpoint.collector.dao.mysql;
 
-import com.navercorp.pinpoint.collector.dao.ServiceIndexDao;
-import com.navercorp.pinpoint.collector.dao.mysql.vo.AgentIndex;
-import com.navercorp.pinpoint.collector.dao.mysql.vo.ApplicationHasAgent;
+import com.navercorp.pinpoint.collector.dao.AgentHierarchyDao;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ApplicationIndexDto;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ServiceIdAndApplicationName;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ServiceIndexDto;
-import com.navercorp.pinpoint.collector.vo.ApplicationIndex;
-import com.navercorp.pinpoint.collector.vo.ServiceHasApplication;
-import com.navercorp.pinpoint.collector.vo.ServiceIndex;
+import com.navercorp.pinpoint.common.server.bo.AgentIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationHasAgent;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceHasApplication;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
@@ -38,13 +38,13 @@ import java.util.UUID;
  */
 @Repository
 @ConditionalOnProperty(name = "pinpoint.experimental.service-index", havingValue = "mysql")
-public class MysqlServiceIndexDao implements ServiceIndexDao {
+public class MysqlAgentHierarchyDao implements AgentHierarchyDao {
 
-    private static final String NAMESPACE = ServiceIndexDao.class.getName() + '.';
+    private static final String NAMESPACE = AgentHierarchyDao.class.getName() + '.';
 
     private final SqlSessionTemplate template;
 
-    public MysqlServiceIndexDao(SqlSessionTemplate template) {
+    public MysqlAgentHierarchyDao(SqlSessionTemplate template) {
         this.template = Objects.requireNonNull(template, "sqlSessionTemplate");
     }
 
@@ -69,9 +69,9 @@ public class MysqlServiceIndexDao implements ServiceIndexDao {
     }
 
     @Override
-    public List<Long> selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock) {
+    public Long selectApplicationIdByServiceIdAndApplicationName(Long serviceId, String applicationName, boolean writeLock) {
         ServiceIdAndApplicationName parameter = new ServiceIdAndApplicationName(serviceId, applicationName);
-        return this.template.selectList(applyWriteLock(NAMESPACE + "selectApplicationIdByServiceIdAndApplicationName", writeLock), parameter);
+        return this.template.selectOne(applyWriteLock(NAMESPACE + "selectApplicationIdByServiceIdAndApplicationName", writeLock), parameter);
     }
 
     @Override

@@ -67,7 +67,7 @@ public class HbaseApiMetaDataDao implements ApiMetaDataDao {
     }
 
     @Override
-    @Cacheable(cacheNames="apiMetaData", key=SPEL_KEY, cacheManager = CacheConfiguration.API_METADATA_CACHE_NAME)
+    @Cacheable(cacheNames=CacheConfiguration.API_METADATA_CACHE_NAME, key=SPEL_KEY)
     public List<ApiMetaDataBo> getApiMetaData(String agentId, long time, int apiId) {
         Objects.requireNonNull(agentId, "agentId");
 

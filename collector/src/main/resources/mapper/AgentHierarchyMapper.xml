@@ -17,7 +17,7 @@
 
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.navercorp.pinpoint.collector.dao.ServiceIndexDao">
+<mapper namespace="com.navercorp.pinpoint.collector.dao.AgentHierarchyDao">
 
     <select id="selectAllServices" resultType="ServiceIndex">
         SELECT id, name FROM service
@@ -46,6 +46,10 @@
 
     <select id="selectServiceIdByName" parameterType="String" resultType="Long">
         SELECT id FROM service WHERE name = #{value}
+    </select>
+
+    <select id="selectServiceIdByNameForUpdate" parameterType="String" resultType="Long">
+        SELECT id FROM service WHERE name = #{value}
             FOR UPDATE
     </select>
 
@@ -53,13 +57,13 @@
         INSERT INTO service (name) VALUES (#{name})
     </insert>
 
-    <insert id="insertApplication" parameterType="ApplicationIndex" useGeneratedKeys="true" keyProperty="applicationId">
+    <insert id="insertApplication" parameterType="ApplicationIndexDto" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO application (name) VALUES (#{name})
     </insert>
 
     <insert id="insertAgent" parameterType="AgentIndex">
-        INSERT INTO agent (id, name) VALUES (#{agentId}, #{agentName})
-            ON DUPLICATE KEY UPDATE name = #{agentName}
+        INSERT INTO agent (id, name) VALUES (#{id}, #{name})
+            ON DUPLICATE KEY UPDATE name = #{name}
     </insert>
 
     <insert id="insertServiceHasApplication" parameterType="ServiceHasApplication">

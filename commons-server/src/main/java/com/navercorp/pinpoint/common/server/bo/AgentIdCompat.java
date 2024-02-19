@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.vo;
+package com.navercorp.pinpoint.common.server.bo;
 
-public record ApplicationIndex(Long id, String name) {
+import java.util.UUID;
+
+/**
+ * @author youngjin.kim2
+ */
+public record AgentIdCompat(
+        String agentIdStr,
+        UUID agentId
+) {
 }

@@ -17,42 +17,76 @@
 package com.navercorp.pinpoint.web.cache;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.navercorp.pinpoint.common.server.config.CommonCacheManagerConfiguration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableCaching
-@Import(CommonCacheManagerConfiguration.class)
 public class CacheConfiguration implements CachingConfigurer {
 
+    public static final String SERVICES_CACHE_NAME = "services";
+    public static final String APPLICATIONS_CACHE_NAME = "applications";
+    public static final String AGENTS_CACHE_NAME = "agents";
     public static final String API_METADATA_CACHE_NAME = "apiMetaData";
     public static final String APPLICATION_LIST_CACHE_NAME = "applicationNameList";
 
     @Bean
-    public CacheManager apiMetaData() {
-        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager(API_METADATA_CACHE_NAME);
+    @Primary
+    public CacheManager cacheManager(
+            @Value("${pinpoint.cache.services.expire-ttl:5}") long servicesExpireAfterWrite,
+            @Value("${pinpoint.cache.applications.expire-ttl:10}") long applicationsExpireAfterWrite,
+            @Value("${pinpoint.cache.agents.expire-ttl:20}") long agentsExpireAfterWrite
+    ) {
+        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager();
+
+        // Set default cache configuration
         caffeineCacheManager.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(600, TimeUnit.SECONDS)
-                .initialCapacity(500)
-                .maximumSize(10000));
-        return caffeineCacheManager;
-    }
+                .initialCapacity(200)
+                .maximumSize(1000));
 
-    @Bean
-    public CacheManager applicationNameList() {
-        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager(APPLICATION_LIST_CACHE_NAME);
-        caffeineCacheManager.setCaffeine(Caffeine.newBuilder()
+        // Register custom cache configurations
+
+        caffeineCacheManager.registerCustomCache(API_METADATA_CACHE_NAME, Caffeine.newBuilder()
+                .expireAfterWrite(600, TimeUnit.SECONDS)
+                .initialCapacity(500)
+                .maximumSize(10000)
+                .build());
+
+        caffeineCacheManager.registerCustomCache(APPLICATION_LIST_CACHE_NAME, Caffeine.newBuilder()
                 .expireAfterWrite(120, TimeUnit.SECONDS)
                 .initialCapacity(10)
-                .maximumSize(200));
+                .maximumSize(200)
+                .build());
+
+        caffeineCacheManager.registerCustomCache(SERVICES_CACHE_NAME, Caffeine.newBuilder()
+                .expireAfterWrite(servicesExpireAfterWrite, TimeUnit.SECONDS)
+                .initialCapacity(1)
+                .weakKeys()
+                .maximumSize(4)
+                .build());
+
+        caffeineCacheManager.registerCustomCache(APPLICATIONS_CACHE_NAME, Caffeine.newBuilder()
+                .expireAfterWrite(applicationsExpireAfterWrite, TimeUnit.SECONDS)
+                .initialCapacity(1000)
+                .weakKeys()
+                .maximumSize(1000)
+                .build());
+
+        caffeineCacheManager.registerCustomCache(AGENTS_CACHE_NAME, Caffeine.newBuilder()
+                .expireAfterWrite(agentsExpireAfterWrite, TimeUnit.SECONDS)
+                .initialCapacity(10000)
+                .maximumSize(10000)
+                .build());
+
         return caffeineCacheManager;
     }
 

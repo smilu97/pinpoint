@@ -17,14 +17,15 @@
 
 package com.navercorp.pinpoint.collector.config;
 
-import com.navercorp.pinpoint.collector.dao.mysql.vo.AgentIndex;
-import com.navercorp.pinpoint.collector.dao.mysql.vo.ApplicationHasAgent;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ApplicationIndexDto;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ServiceIdAndApplicationName;
 import com.navercorp.pinpoint.collector.dao.mysql.vo.ServiceIndexDto;
-import com.navercorp.pinpoint.collector.vo.ApplicationIndex;
-import com.navercorp.pinpoint.collector.vo.ServiceHasApplication;
-import com.navercorp.pinpoint.collector.vo.ServiceIndex;
+import com.navercorp.pinpoint.common.server.bo.AgentIdCompat;
+import com.navercorp.pinpoint.common.server.bo.AgentIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationHasAgent;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceHasApplication;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 import com.navercorp.pinpoint.common.server.util.time.Range;
 import com.navercorp.pinpoint.mybatis.typehandler.UUIDByteArrayTypeHandler;
 import org.apache.ibatis.type.TypeAliasRegistry;
@@ -36,6 +37,7 @@ public class CollectorCommonMyBatisRegistryHandler implements CollectorMyBatisRe
     @Override
     public void registerTypeAlias(TypeAliasRegistry typeAliasRegistry) {
         typeAliasRegistry.registerAlias(Range.class);
+        typeAliasRegistry.registerAlias(UUID.class);
 
         typeAliasRegistry.registerAlias(AgentIndex.class);
         typeAliasRegistry.registerAlias(ApplicationHasAgent.class);
@@ -45,6 +47,7 @@ public class CollectorCommonMyBatisRegistryHandler implements CollectorMyBatisRe
         typeAliasRegistry.registerAlias(ServiceIdAndApplicationName.class);
         typeAliasRegistry.registerAlias(ServiceIndexDto.class);
         typeAliasRegistry.registerAlias(ServiceIndex.class);
+        typeAliasRegistry.registerAlias(AgentIdCompat.class);
     }
 
     @Override

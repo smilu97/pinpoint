@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.vo;
+package com.navercorp.pinpoint.common.server.bo;
 
-public record ServiceIndex(Long id, String name) {
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * @author youngjin.kim2
+ */
+public record ApplicationHasAgent(Long applicationId, UUID agentId) {
+
+    public ApplicationHasAgent(Long applicationId, UUID agentId) {
+        this.applicationId = Objects.requireNonNull(applicationId, "applicationId");
+        this.agentId = Objects.requireNonNull(agentId, "agentId");
+    }
 }

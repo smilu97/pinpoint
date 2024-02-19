@@ -129,6 +129,13 @@ public class Header {
         return Collections.unmodifiableMap(properties);
     }
 
+    public Header withAgentId(String agentId) {
+        return new Header(
+                name,
+                agentId, agentName, applicationName, serviceId,
+                serviceType, agentStartTime, socketId, supportCommandCodeList, properties);
+    }
+
     @Override
     public String toString() {
         return "Header{" +

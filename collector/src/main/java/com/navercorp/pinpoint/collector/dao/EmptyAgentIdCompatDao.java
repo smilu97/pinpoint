@@ -14,17 +14,28 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.vo;
+package com.navercorp.pinpoint.collector.dao;
 
-import java.util.Objects;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 /**
  * @author youngjin.kim2
  */
-public record ServiceHasApplication(Long serviceId, Long applicationId) {
+@Service
+@ConditionalOnProperty(name = "pinpoint.experimental.service-index", havingValue = "empty", matchIfMissing = true)
+public class EmptyAgentIdCompatDao implements AgentIdCompatDao {
 
-    public ServiceHasApplication(Long serviceId, Long applicationId) {
-        this.serviceId = Objects.requireNonNull(serviceId, "serviceId");
-        this.applicationId = Objects.requireNonNull(applicationId, "applicationId");
+    @Override
+    public void insertAgentIdCompat(String agentIdStr, UUID agentId) {
+
     }
+
+    @Override
+    public UUID selectAgentIdCompat(String agentIdStr) {
+        return null;
+    }
+
 }

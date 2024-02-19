@@ -16,10 +16,9 @@
 
 package com.navercorp.pinpoint.collector.service;
 
-import com.navercorp.pinpoint.collector.dao.ServiceIndexDao;
-import com.navercorp.pinpoint.collector.vo.ApplicationIndex;
-import com.navercorp.pinpoint.collector.vo.ServiceHasApplication;
-import com.navercorp.pinpoint.collector.vo.ServiceIndex;
+import com.navercorp.pinpoint.common.server.bo.ApplicationIndex;
+import com.navercorp.pinpoint.common.server.bo.ServiceHasApplication;
+import com.navercorp.pinpoint.common.server.bo.ServiceIndex;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,15 +36,17 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author youngjin.kim2
  */
 @Service
-public class ServiceIndexRepository implements InitializingBean {
+public class CachedAgentHierarchyService implements AgentHierarchyService, InitializingBean {
 
-    private final ServiceIndexDao serviceIndexDao;
+    private final AgentHierarchyRepository agentHierarchyRepository;
 
     private final AtomicBoolean concurrentFence = new AtomicBoolean(false);
     private final AtomicReference<State> stateRef = new AtomicReference<>(State.EMPTY);
 
-    public ServiceIndexRepository(ServiceIndexDao serviceIndexDao) {
-        this.serviceIndexDao = Objects.requireNonNull(serviceIndexDao, "serviceIndexDao");
+    public CachedAgentHierarchyService(
+            AgentHierarchyRepository agentHierarchyRepository
+    ) {
+        this.agentHierarchyRepository = Objects.requireNonNull(agentHierarchyRepository, "agentHierarchyRepository");
     }
 
     @Override
@@ -64,20 +66,60 @@ public class ServiceIndexRepository implements InitializingBean {
     }
 
     private void reload0() {
-        List<ServiceIndex> serviceIndices = serviceIndexDao.selectAllServices();
-        List<ApplicationIndex> applicationIndices = serviceIndexDao.selectAllApplications();
-        List<ServiceHasApplication> serviceHasApplications = serviceIndexDao.selectAllServiceHasApplications();
+        List<ServiceIndex> serviceIndices = this.agentHierarchyRepository.getServices();
+        List<ApplicationIndex> applicationIndices = this.agentHierarchyRepository.getApplications();
+        List<ServiceHasApplication> serviceHasApplications = this.agentHierarchyRepository.getServiceHasApplications();
 
         State newState = State.build(serviceIndices, applicationIndices, serviceHasApplications);
         stateRef.set(newState);
     }
 
-    public Long getServiceIdByName(String name) {
-        return stateRef.get().getServiceIdByName(name);
+    @Override
+    public void insertAgent(String serviceId, String applicationName, UUID agentId, String agentName) {
+        long applicationId = insertApplication(serviceId, applicationName);
+        insertAgent(agentId, agentName, applicationId);
     }
 
-    public Long getApplicationId(Long serviceId, String applicationName) {
-        return stateRef.get().getApplicationId(serviceId, applicationName);
+    @Override
+    public long insertApplication(String serviceId, String applicationName) {
+        long serviceIdId = insertService(serviceId);
+        return insertApplication(serviceIdId, applicationName);
+    }
+
+    private Long insertService(String serviceId) {
+        // Try on memory
+        Long serviceIdIdInMemory = this.stateRef.get().getServiceIdByName(serviceId);
+        if (serviceIdIdInMemory != null) {
+            return serviceIdIdInMemory;
+        }
+
+        // Try on DB without write-lock
+        Long serviceIdId = this.agentHierarchyRepository.getServiceId(serviceId);
+        if (serviceIdId != null) {
+            return serviceIdId;
+        }
+
+        return agentHierarchyRepository.insertService(serviceId);
+    }
+
+    private Long insertApplication(Long serviceId, String applicationName) {
+        // Try on memory
+        Long applicationIdInMemory = this.stateRef.get().getApplicationId(serviceId, applicationName);
+        if (applicationIdInMemory != null) {
+            return applicationIdInMemory;
+        }
+
+        // Try on DB without write-lock
+        Long applicationId = this.agentHierarchyRepository.getApplication(serviceId, applicationName);
+        if (applicationId != null) {
+            return applicationId;
+        }
+
+        return agentHierarchyRepository.insertApplication(serviceId, applicationName);
+    }
+
+    private void insertAgent(UUID agentId, String agentName, long applicationId) {
+        agentHierarchyRepository.insertAgent(applicationId, agentId, agentName);
     }
 
     private record State(

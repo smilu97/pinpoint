@@ -16,10 +16,10 @@
 
 package com.navercorp.pinpoint.collector.service;
 
-import com.github.f4b6a3.uuid.UuidCreator;
 import com.navercorp.pinpoint.collector.dao.AgentInfoDao;
 import com.navercorp.pinpoint.collector.dao.ApplicationIndexDao;
 import com.navercorp.pinpoint.common.server.bo.AgentInfoBo;
+import com.navercorp.pinpoint.common.util.AgentUuidUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -42,16 +42,16 @@ public class AgentInfoService {
 
     private final ApplicationIndexDao applicationIndexDao;
 
-    private final ServiceIndexService serviceIndexService;
+    private final AgentHierarchyService agentHierarchyService;
 
     public AgentInfoService(
             AgentInfoDao agentInfoDao,
             ApplicationIndexDao applicationIndexDao,
-            ServiceIndexService serviceIndexService
+            AgentHierarchyService agentHierarchyService
     ) {
         this.agentInfoDao = Objects.requireNonNull(agentInfoDao, "agentInfoDao");
         this.applicationIndexDao = Objects.requireNonNull(applicationIndexDao, "applicationIndexDao");
-        this.serviceIndexService = Objects.requireNonNull(serviceIndexService, "serviceIndexService");
+        this.agentHierarchyService = Objects.requireNonNull(agentHierarchyService, "agentHierarchyRepository");
     }
 
     public void insert(@Valid final AgentInfoBo agentInfoBo) {
@@ -64,40 +64,10 @@ public class AgentInfoService {
     private void insertService(AgentInfoBo agentInfoBo) {
         String serviceId = agentInfoBo.getServiceId();
         String applicationName = agentInfoBo.getApplicationName();
-        String agentId = agentInfoBo.getAgentId();
+        UUID agentId = AgentUuidUtils.decode(agentInfoBo.getAgentId());
         String agentName = agentInfoBo.getAgentName();
 
-        long serviceIdId = insertService(serviceId);
-        long applicationId = insertApplication(serviceIdId, applicationName);
-        insertAgent(applicationId, agentId, agentName);
-    }
-
-    private Long insertService(String serviceId) {
-        Long serviceIdId = serviceIndexService.getServiceId(serviceId);
-        if (serviceIdId != null) {
-            return serviceIdId;
-        }
-        return serviceIndexService.insertService(serviceId);
-    }
-
-    private Long insertApplication(Long serviceId, String applicationName) {
-        Long applicationId = serviceIndexService.getApplicationId(serviceId, applicationName);
-        if (applicationId != null) {
-            return applicationId;
-        }
-        return serviceIndexService.insertApplication(serviceId, applicationName);
-    }
-
-    private void insertAgent(Long applicationId, String agentId, String agentName) {
-        serviceIndexService.insertAgent(applicationId, wrapAgentId(agentId), agentName);
-    }
-
-    private UUID wrapAgentId(String rawAgentId) {
-        try {
-            return UUID.fromString(rawAgentId);
-        } catch (IllegalArgumentException ignored) {
-            return UuidCreator.getTimeOrderedEpoch();
-        }
+        this.agentHierarchyService.insertAgent(serviceId, applicationName, agentId, agentName);
     }
 
     public AgentInfoBo getAgentInfo(@NotBlank final String agentId, @PositiveOrZero final long timestamp) {

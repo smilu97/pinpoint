@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.dao.mysql.vo;
+package com.navercorp.pinpoint.common.server.bo;
 
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * @author youngjin.kim2
  */
-public record ApplicationHasAgent(Long applicationId, UUID agentId) {
+public record ServiceHasApplication(Long serviceId, Long applicationId) {
 
-    public ApplicationHasAgent(Long applicationId, UUID agentId) {
+    public ServiceHasApplication(Long serviceId, Long applicationId) {
+        this.serviceId = Objects.requireNonNull(serviceId, "serviceId");
         this.applicationId = Objects.requireNonNull(applicationId, "applicationId");
-        this.agentId = Objects.requireNonNull(agentId, "agentId");
     }
 }

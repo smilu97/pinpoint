@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package com.navercorp.pinpoint.collector.dao.mysql.vo;
+package com.navercorp.pinpoint.collector.service;
 
 import java.util.UUID;
 
 /**
  * @author youngjin.kim2
  */
-public record AgentIndex(UUID agentId, String agentName) {
+public interface AgentHierarchyService {
+
+    void insertAgent(String serviceId, String applicationName, UUID agentId, String agentName);
+
+    long insertApplication(String serviceId, String applicationName);
 
 }
